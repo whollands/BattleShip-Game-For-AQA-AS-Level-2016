@@ -22,9 +22,31 @@ class Program
 		public int Size;
 		public int HitCount;
 	}
+		
+	private static string GetFileName()
+	{
+		string path = "";
+		bool fileExists = false;
 
-	const string TrainingGame = "Training.txt";
+		while(!fileExists)
+			// keep asking for file while not found
+		{
+			Console.Write("Enter file name or path: ");
+			path = Console.ReadLine();
 
+			if(File.Exists(path))
+			{
+				fileExists = true;
+			}
+			else
+			{
+				Console.WriteLine("File not found.");
+			}
+		}
+
+		return path;
+
+	} 
 
 
 	private static string CompressFile(string Filename)
@@ -150,13 +172,10 @@ class Program
 		}
 	}
 
-
-
 	private static void MakePlayerMove(ref char[,] Board, ref ShipType[] Ships)
 	{
 		int Row = 0;
 		int Column = 0;
-
 		GetRowColumn(ref Row, ref Column);
 		if (Board[Row, Column] == 'm' || Board[Row, Column] == 'h')
 		{
@@ -165,55 +184,66 @@ class Program
 		else if (Board[Row, Column] == '-')
 		{
 			Console.WriteLine("Sorry, (" + Column + "," + Row + ") is a miss.");
+	
 			Board[Row, Column] = 'm';
+		}
+		else if (Board[Row, Column] == 'M')
+		{
+			
+
+			Console.WriteLine("You hit a mine! (" + Column + "," + Row + ").");
+
+			Board[Row, Column] = '*';
+			// mark the mine that was hit on the board with an * because it's pretty :D
+			// (also that way the PrintBoard() function knows whether a mine is hit or needs to be hidden.
+
+				for(int SearchRow = 0; SearchRow <= 9; SearchRow++)
+				{
+					for(int SearchCol = 0; SearchCol <= 9; SearchCol++)
+					{
+						if(
+							(Column - 1 == SearchCol && Row - 1 == SearchRow) ||
+							(Column == SearchCol && Row - 1 == SearchRow) ||
+							(Column + 1 == SearchCol && Row - 1 == SearchRow) ||
+							// search the 3 cells above mine
+	
+							(Column - 1 == SearchCol && Row == SearchRow) ||
+							(Column + 1 == SearchCol && Row == SearchRow) ||
+							// search cells left and right of mine
+	
+							(Column - 1 == SearchCol && Row + 1 == SearchRow) ||
+							(Column == SearchCol && Row + 1 == SearchRow) ||
+							(Column + 1 == SearchCol && Row + 1 == SearchRow)
+							// search the 3 cells below mine
+						)
+						{
+							if(
+								Board[SearchRow, SearchCol] == 'A' || 
+								Board[SearchRow, SearchCol] == 'B' || 
+								Board[SearchRow, SearchCol] == 'S' || 
+								Board[SearchRow, SearchCol] == 'D' || 
+								Board[SearchRow, SearchCol] == 'P'
+								// if... we find a ship there...
+							)
+							{
+								Board[SearchRow, SearchCol] = 'h';
+								// mark it as a hit
+							}
+							if(Board[SearchRow, SearchCol] == '-')
+							{
+								Board[SearchRow, SearchCol] = 'm';
+								// otherwise mark it as a miss
+							}
+
+						}
+					} // END for search col
+				} // END for search row
+
+
 		}
 		else
 		{
 			Console.WriteLine("Hit at (" + Column + "," + Row + ").");
-
-			switch(Convert.ToString(Board[Row, Column]))
-			// a switch case makes for a neater solution
-			// (also Mr. McGuire secretly hates switch cases!)
-
-			{
-			case "A":
-				Ships[0].HitCount++;
-				if(Ships[0].HitCount == Ships[0].Size)
-				{
-					Console.WriteLine("You sunk my aircraft carrier! :(");
-				}
-			break;
-			case "B":
-				Ships[1].HitCount++;
-				if(Ships[1].HitCount == Ships[1].Size)
-				{
-					Console.WriteLine("You sunk my battleship! :(");
-				}
-			
-				break;
-			case "S":
-				Ships[2].HitCount++;
-				if(Ships[2].HitCount == Ships[2].Size)
-				{
-					Console.WriteLine("You sunk my submarine! :(");
-				}
-			break;
-			case "D":
-				Ships[3].HitCount++;
-				if(Ships[3].HitCount == Ships[3].Size)
-				{
-					Console.WriteLine("You sunk my destroyer! :(");
-				}
-			break;
-			case "P":
-				Ships[4].HitCount++;
-				if(Ships[4].HitCount == Ships[4].Size)
-				{
-					Console.WriteLine("You sunk my patrol boat! :(");
-				}
-			break;
-
-			}
 			Board[Row, Column] = 'h';
 		}
 	}
@@ -274,6 +304,34 @@ class Program
 			PlaceShip(ref Board, Ship, Row, Column, Orientation);
 		}
 	}
+
+	private static void PlaceRandomMines(ref char[,] Board, int NumOfMines)
+	{
+		Random RandomNumber = new Random();
+		bool validMine = false;
+		int Row = 0;
+		int Column = 0;
+
+		for(int i = 0; i < NumOfMines; i++)
+			// repeat process for each mine
+		{
+			while(!validMine)
+				// repeat until mine has been placed
+			{
+				Row = RandomNumber.Next(0, 10);
+				Column = RandomNumber.Next(0, 10);
+
+				if(Board[Row, Column] == '-')
+					// check if mine has been placed there
+				{
+					Board[Row, Column] = 'M';
+					validMine = true;
+				}
+			}
+			validMine = false;
+			// reset for next mine
+		}
+	} 
 
 	private static void PlaceShip(ref char[,] Board, ShipType Ship, int Row, int Column, char Orientation)
 	{
@@ -351,61 +409,96 @@ class Program
 		Console.WriteLine();
 		Console.WriteLine("The board looks like this: ");
 		Console.WriteLine();
-		Console.Write(" ");
+
+
+		Console.Write("  ");
 		for (int Column = 0; Column < 10; Column++)
 		{
-			Console.Write(" " + Column + "  ");
+			Console.Write("  " + Column + " ");
 		}
 		Console.WriteLine();
+
+		Console.BackgroundColor = ConsoleColor.Blue;
+		// background to blue
+
+		Console.ForegroundColor = ConsoleColor.DarkBlue;
+		Console.WriteLine("  +---+---+---+---+---+---+---+---+---+---+");
+		Console.ForegroundColor = ConsoleColor.Black;
+
+		Console.BackgroundColor = ConsoleColor.White;
+
 		for (int Row = 0; Row < 10; Row++)
 		{
 			RowLetter = Convert.ToString((char)(Row + 97)).ToUpper();
-			// cast row value, plus 97 for ascii value then to upper case
+			// convert integer to ascii, then to letter
+		
+			Console.BackgroundColor = ConsoleColor.White;
 
-			Console.Write(RowLetter + " ");
+			Console.Write(RowLetter);
+
+			Console.BackgroundColor = ConsoleColor.Blue;
+
+			Console.ForegroundColor = ConsoleColor.DarkBlue;
+			Console.Write(" | ");
+			Console.ForegroundColor = ConsoleColor.Black;
+
+
 			for (int Column = 0; Column < 10; Column++)
 			{
 				if (Board[Row, Column] == '-')
 				{
 					Console.Write(" ");
 				}
-				else if (Board[Row, Column] == 'A' || Board[Row, Column] == 'B' || Board[Row, Column] == 'S' || Board[Row, Column] == 'D' || Board[Row, Column] == 'P')
+				else if (
+					Board[Row, Column] == 'A' ||
+					Board[Row, Column] == 'B' ||
+					Board[Row, Column] == 'S' ||
+					Board[Row, Column] == 'D' ||
+					Board[Row, Column] == 'P' ||
+					Board[Row, Column] == 'M'
+
+					// uncomment lines above to hide mines on the board.
+					// for testing, mines are shown as “M” on the board or “*” if they are hit
+				)
 				{
 					Console.Write(" ");
 				}
 				else
 				{
-					/* modified code begins! Let there be color */
-					if(Board[Row, Column] == 'h')
+					switch(Board[Row, Column])
 					{
-						Console.ForegroundColor = ConsoleColor.Red;
-						Console.Write(Board[Row, Column]);
+					case 'h': Console.ForegroundColor = ConsoleColor.Red; break;
+					case 'm': Console.ForegroundColor = ConsoleColor.DarkBlue; break;
+					case '*': Console.ForegroundColor = ConsoleColor.DarkYellow; break;
 					}
-					else
-					{
-						Console.ForegroundColor = ConsoleColor.DarkGray;
-						Console.Write(Board[Row, Column]);
-					}
+
+					Console.Write(Board[Row, Column]);
 					Console.ForegroundColor = ConsoleColor.Black;
-					/* end modified code! */
-				}
-				if (Column != 9)
-				{
-					Console.Write(" | ");
 
 				}
+
+				Console.ForegroundColor = ConsoleColor.DarkBlue;
+				Console.Write(" | ");
+				Console.ForegroundColor = ConsoleColor.Black;
+				
 			}
-			Console.WriteLine();
+
+			Console.WriteLine("");
+			Console.ForegroundColor = ConsoleColor.DarkBlue;
+			Console.WriteLine("  +---+---+---+---+---+---+---+---+---+---+");
+			Console.ForegroundColor = ConsoleColor.Black;
+
+			Console.BackgroundColor = ConsoleColor.White;
 		}
-	}
+	} 
 
 	private static void DisplayMenu()
 	{
 		Console.WriteLine("MAIN MENU");
 		Console.WriteLine("");
 		Console.WriteLine("1. Start new game");
-		Console.WriteLine("2. Load training game");
-		Console.WriteLine("3. Compress training file");
+		Console.WriteLine("2. Load game from file");
+		Console.WriteLine("3. Compress game file");
 		Console.WriteLine("9. Quit");
 		Console.WriteLine();
 	}
@@ -422,7 +515,7 @@ class Program
 			Console.Write("Please enter your choice: ");
 			input = Console.ReadLine();
 		
-			if(input == "1" || input == "2" || input == "9")
+			if(input == "1" || input == "2" || input == "3" || input == "9")
 			// check if menu option exists
 			{
 				choice = int.Parse(input);
@@ -477,12 +570,11 @@ class Program
 	static void Main(string[] args)
 	{
 
-
-
-
+		string TrainingGame = "";
 		ShipType[] Ships = new ShipType[5];
 		char[,] Board = new char[10, 10];
 		int MenuOption = 0;
+
 		while (MenuOption != 9)
 		{
 			SetUpBoard(ref Board);
@@ -492,12 +584,18 @@ class Program
 			if (MenuOption == 1)
 			{
 				PlaceRandomShips(ref Board, Ships);
+				PlaceRandomMines(ref Board, 3);
 				PlayGame(ref Board, ref Ships);
 			}
 			if (MenuOption == 2)
 			{
-				LoadGame(TrainingGame, ref Board);
+				LoadGame(GetFileName(), ref Board);
 				PlayGame(ref Board, ref Ships);
+			}
+			if (MenuOption == 3)
+			{
+				Console.WriteLine("\n" + CompressFile(GetFileName()));
+				Console.WriteLine();
 			}
 		}
 
