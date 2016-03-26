@@ -418,25 +418,17 @@ class Program
 		}
 		Console.WriteLine();
 
-		Console.BackgroundColor = ConsoleColor.Blue;
-		// background to blue
-
 		Console.ForegroundColor = ConsoleColor.DarkBlue;
 		Console.WriteLine("  +---+---+---+---+---+---+---+---+---+---+");
 		Console.ForegroundColor = ConsoleColor.Black;
-
-		Console.BackgroundColor = ConsoleColor.White;
 
 		for (int Row = 0; Row < 10; Row++)
 		{
 			RowLetter = Convert.ToString((char)(Row + 97)).ToUpper();
 			// convert integer to ascii, then to letter
 		
-			Console.BackgroundColor = ConsoleColor.White;
 
 			Console.Write(RowLetter);
-
-			Console.BackgroundColor = ConsoleColor.Blue;
 
 			Console.ForegroundColor = ConsoleColor.DarkBlue;
 			Console.Write(" | ");
@@ -487,8 +479,6 @@ class Program
 			Console.ForegroundColor = ConsoleColor.DarkBlue;
 			Console.WriteLine("  +---+---+---+---+---+---+---+---+---+---+");
 			Console.ForegroundColor = ConsoleColor.Black;
-
-			Console.BackgroundColor = ConsoleColor.White;
 		}
 	} 
 
