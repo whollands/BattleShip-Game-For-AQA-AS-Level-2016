@@ -1,13 +1,6 @@
 ﻿/*
  * 
- * Bugs:
- * 
- * - Inputted co-ordinates can go out of range
- * - Crashes if non-ints entered
- * 
- * Improvements:
- * - save to file
- * - letters on top row
+ *
  * 
 */
 
@@ -23,6 +16,8 @@ class Program
 		public int HitCount;
 	}
 		
+	const int BoardSize = 10;
+
 	private static string GetFileName()
 	{
 		string path = "";
@@ -98,13 +93,12 @@ class Program
 		fileName = Console.ReadLine();
 
 		// check if file exists
-		// 
 
 		using (StreamWriter f = new StreamWriter(fileName + ".txt"))
 		{
-			for(int row = 0; row < 10; row ++)
+			for(int row = 0; row < BoardSize; row ++)
 			{
-				for(int col = 0; col < 10; col ++)
+				for(int col = 0; col < BoardSize; col ++)
 				{
 					f.Write(Board[row, col]);
 				}
@@ -116,68 +110,43 @@ class Program
 
 	private static void GetRowColumn(ref int Row, ref int Column)
 	{
-		char inputRow = ' ';
-		bool validatedRow = false;
 
-		string inputCol = "";
-		bool validatedCol = false;
+		string Input = "";
+		char RowChar = ' ';
 
-		while(validatedCol == false)
+		Console.Write("Enter Co-ordinates: ");
+		Input = Console.ReadLine();
+
+		while(	Input.Length != 2 || 
+				Input[0] - 97 > 9 || 
+				Input[0] - 97 < 0 ||
+				Input[1] - 48 > 9 ||
+				Input[1] - 48 < 0
+			)
 		{
-			Console.Write("Please enter column: ");
-			inputCol = Console.ReadLine();
-
-			if(int.TryParse(inputCol, out Column))
-			{
-				if(Column < 0 || Column > 9)
-				{
-					Console.WriteLine("Co-ordinate must be a number between 0 and 9.\n");
-				}
-				else
-				{
-					validatedCol = true;
-				}
-
-			}
-			else
-			{
-				Console.WriteLine("Co-ordinate must be a number.\n");
-			}
-				
+			Console.WriteLine("Invalid co-ordinate. e.g: A1 or E5");
+			Console.Write("Enter Co-ordinates: ");
+			Input = Console.ReadLine();
 		}
 
-		while(validatedRow == false)
-		{
-			Console.Write("Please enter row: ");
+		Input = Input.ToLower();
 
-			if(char.TryParse(Console.ReadLine().ToLower(), out inputRow))
-			{
-				Row = (int)inputRow - 97;
+		RowChar = Input[0];
 
-				if(Row < 0 || Row > 9)
-				{
-					Console.WriteLine("Row must be between A and J.\n");
-				}
-				else
-				{
-					validatedRow = true;
-				}
-
-			}
-			else
-			{
-				Console.WriteLine("Row must be a letter between A and J.\n");
-			}
-
-		}
+		Row = (int)RowChar - 97;
+		Column = Convert.ToInt32(Input[1]) - 48;
+		Console.WriteLine(Column);
+	
 	}
 
-	private static void MakePlayerMove(ref char[,] Board, ref ShipType[] Ships)
+	private static void MakePlayerMove(ref char[,] Board, ref char[,] OriginalBoard, ref ShipType[] Ships)
 	{
 		int Row = 0;
 		int Column = 0;
+		bool sunkShip = false;
+
 		GetRowColumn(ref Row, ref Column);
-		if (Board[Row, Column] == 'm' || Board[Row, Column] == 'h')
+		if (Board[Row, Column] == 'm' || Board[Row, Column] == 'h' || Board[Row, Column] == 'x')
 		{
 			Console.WriteLine("Sorry, you have already shot at the square (" + Column + "," + Row + "). Please try again.");
 		}
@@ -218,11 +187,10 @@ class Program
 						)
 						{
 							if(
-								Board[SearchRow, SearchCol] == 'A' || 
-								Board[SearchRow, SearchCol] == 'B' || 
-								Board[SearchRow, SearchCol] == 'S' || 
-								Board[SearchRow, SearchCol] == 'D' || 
-								Board[SearchRow, SearchCol] == 'P'
+								Board[SearchRow, SearchCol] != 'm' && 
+								Board[SearchRow, SearchCol] != 'h' && 
+								Board[SearchRow, SearchCol] != '-' && 
+								Board[SearchRow, SearchCol] != '*'
 								// if... we find a ship there...
 							)
 							{
@@ -243,16 +211,131 @@ class Program
 		}
 		else
 		{
-			Console.WriteLine("Hit at (" + Column + "," + Row + ").");
-			Board[Row, Column] = 'h';
+
+			switch(Board[Row, Column])
+			{
+			case 'A': 
+				
+				Ships[0].HitCount++;
+				if(Ships[0].Size == Ships[0].HitCount)
+				{
+					Console.WriteLine("You sunk an Aircraft carrier!");
+
+					for(int row = 0; row < BoardSize; row++)
+					{
+						for(int col = 0; col < BoardSize; col++)
+						{
+							if(OriginalBoard[row, col] == 'A')
+							{
+								Board[row, col] = 'x';
+							}
+						}
+					}
+
+					sunkShip = true;
+				}
+				break;
+			case 'B':
+				Ships[1].HitCount++; 
+
+				if(Ships[1].Size == Ships[1].HitCount)
+				{
+					Console.WriteLine("You sunk a Battleship!");
+
+					for(int row = 0; row < BoardSize; row++)
+					{
+						for(int col = 0; col < BoardSize; col++)
+						{
+							if(OriginalBoard[row, col] == 'B')
+							{
+								Board[row, col] = 'x';
+							}
+						}
+					}
+
+					sunkShip = true;
+				}
+
+
+				break;
+			case 'S': 
+				Ships[2].HitCount++; 
+				if(Ships[2].Size == Ships[2].HitCount)
+				{
+					Console.WriteLine("You sunk a Submarine!");
+
+					for(int row = 0; row < BoardSize; row++)
+					{
+						for(int col = 0; col < BoardSize; col++)
+						{
+							if(OriginalBoard[row, col] == 'S')
+							{
+								Board[row, col] = 'x';
+							}
+						}
+					}
+
+					sunkShip = true;
+				}
+				break;
+			case 'D':
+				Ships[3].HitCount++; 
+
+				if(Ships[3].Size == Ships[3].HitCount)
+				{
+					Console.WriteLine("You sunk a Destroyer!");
+
+					for(int row = 0; row < BoardSize; row++)
+					{
+						for(int col = 0; col < BoardSize; col++)
+						{
+							if(OriginalBoard[row, col] == 'D')
+							{
+								Board[row, col] = 'x';
+							}
+						}
+					}
+
+					sunkShip = true;
+				}
+				break;
+
+			case 'P': 
+				Ships[4].HitCount++; 
+				if(Ships[4].Size == Ships[4].HitCount)
+				{
+					Console.WriteLine("You sunk a Patrol boat!");
+
+					for(int row = 0; row < BoardSize; row++)
+					{
+						for(int col = 0; col < BoardSize; col++)
+						{
+							if(OriginalBoard[row, col] == 'P')
+							{
+								Board[row, col] = 'x';
+							}
+						}
+					}
+
+					sunkShip = true;
+
+				}
+				break;
+			}
+
+			if(sunkShip == false)
+			{
+				Console.WriteLine("Hit at (" + Column + "," + Row + ").");
+				Board[Row, Column] = 'h';
+			}
 		}
 	}
 
 	private static void SetUpBoard(ref char[,] Board)
 	{
-		for (int Row = 0; Row < 10; Row++)
+		for (int Row = 0; Row < BoardSize; Row++)
 		{
-			for (int Column = 0; Column < 10; Column++)
+			for (int Column = 0; Column < BoardSize; Column++)
 			{
 				Board[Row, Column] = '-';
 			}
@@ -263,10 +346,10 @@ class Program
 	{
 		string Line = "";
 		StreamReader BoardFile = new StreamReader(TrainingGame);
-		for (int Row = 0; Row < 10; Row++)
+		for (int Row = 0; Row < BoardSize; Row++)
 		{
 			Line = BoardFile.ReadLine();
-			for (int Column = 0; Column < 10; Column++)
+			for (int Column = 0; Column < BoardSize; Column++)
 			{
 				Board[Row, Column] = Line[Column];
 			}
@@ -287,8 +370,8 @@ class Program
 			Valid = false;
 			while (Valid == false)
 			{
-				Row = RandomNumber.Next(0, 10);
-				Column = RandomNumber.Next(0, 10);
+				Row = RandomNumber.Next(0, BoardSize);
+				Column = RandomNumber.Next(0, BoardSize);
 				HorV = RandomNumber.Next(0, 2);
 				if (HorV == 0)
 				{
@@ -318,8 +401,8 @@ class Program
 			while(!validMine)
 				// repeat until mine has been placed
 			{
-				Row = RandomNumber.Next(0, 10);
-				Column = RandomNumber.Next(0, 10);
+				Row = RandomNumber.Next(0, BoardSize);
+				Column = RandomNumber.Next(0, BoardSize);
 
 				if(Board[Row, Column] == '-')
 					// check if mine has been placed there
@@ -353,11 +436,11 @@ class Program
 
 	private static bool ValidateBoatPosition(char[,] Board, ShipType Ship, int Row, int Column, char Orientation)
 	{
-		if (Orientation == 'v' && Row + Ship.Size > 10)
+		if (Orientation == 'v' && Row + Ship.Size > BoardSize)
 		{
 			return false;
 		}
-		else if (Orientation == 'h' && Column + Ship.Size > 10)
+		else if (Orientation == 'h' && Column + Ship.Size > BoardSize)
 		{
 			return false;
 		}
@@ -389,9 +472,9 @@ class Program
 
 	private static bool CheckWin(char[,] Board)
 	{
-		for (int Row = 0; Row < 10; Row++)
+		for (int Row = 0; Row < BoardSize; Row++)
 		{
-			for (int Column = 0; Column < 10; Column++)
+			for (int Column = 0; Column < BoardSize; Column++)
 			{
 				if (Board[Row, Column] == 'A' || Board[Row, Column] == 'B' || Board[Row, Column] == 'S' || Board[Row, Column] == 'D' || Board[Row, Column] == 'P')
 				{
@@ -412,7 +495,7 @@ class Program
 
 
 		Console.Write("  ");
-		for (int Column = 0; Column < 10; Column++)
+		for (int Column = 0; Column < BoardSize; Column++)
 		{
 			Console.Write("  " + Column + " ");
 		}
@@ -422,7 +505,7 @@ class Program
 		Console.WriteLine("  +---+---+---+---+---+---+---+---+---+---+");
 		Console.ForegroundColor = ConsoleColor.Black;
 
-		for (int Row = 0; Row < 10; Row++)
+		for (int Row = 0; Row < BoardSize; Row++)
 		{
 			RowLetter = Convert.ToString((char)(Row + 97)).ToUpper();
 			// convert integer to ascii, then to letter
@@ -435,7 +518,7 @@ class Program
 			Console.ForegroundColor = ConsoleColor.Black;
 
 
-			for (int Column = 0; Column < 10; Column++)
+			for (int Column = 0; Column < BoardSize; Column++)
 			{
 				if (Board[Row, Column] == '-')
 				{
@@ -448,9 +531,6 @@ class Program
 					Board[Row, Column] == 'D' ||
 					Board[Row, Column] == 'P' ||
 					Board[Row, Column] == 'M'
-
-					// uncomment lines above to hide mines on the board.
-					// for testing, mines are shown as “M” on the board or “*” if they are hit
 				)
 				{
 					Console.Write(" ");
@@ -461,11 +541,11 @@ class Program
 					{
 					case 'h': Console.ForegroundColor = ConsoleColor.Red; break;
 					case 'm': Console.ForegroundColor = ConsoleColor.DarkBlue; break;
+					case 'x': Console.ForegroundColor = ConsoleColor.DarkGreen; break;
 					case '*': Console.ForegroundColor = ConsoleColor.DarkYellow; break;
 					}
 
 					Console.Write(Board[Row, Column]);
-					Console.ForegroundColor = ConsoleColor.Black;
 
 				}
 
@@ -484,51 +564,36 @@ class Program
 
 	private static void DisplayMenu()
 	{
-		Console.WriteLine("MAIN MENU");
+		Console.WriteLine("BATTLESHIPS MAIN MENU");
 		Console.WriteLine("");
-		Console.WriteLine("1. Start new game");
-		Console.WriteLine("2. Load game from file");
-		Console.WriteLine("3. Compress game file");
+		Console.WriteLine("1. Play regular Battleships");
+		Console.WriteLine("2. Play Salvo!");
+		Console.WriteLine("3. Load game from file");
+		Console.WriteLine("4. Compress game file");
 		Console.WriteLine("9. Quit");
 		Console.WriteLine();
 	}
 
-	private static int GetMainMenuChoice()
-	{
-		int choice = 0;
-		string input = "";
-		bool validated = false;
-
-		while(validated == false)
-		// loop untill user has entered valid choice
-		{
-			Console.Write("Please enter your choice: ");
-			input = Console.ReadLine();
-		
-			if(input == "1" || input == "2" || input == "3" || input == "9")
-			// check if menu option exists
-			{
-				choice = int.Parse(input);
-				validated = true;
-				// user has entered valid input!
-			}
-			else
-			{
-				Console.WriteLine("That menu option does not exist!\n");
-			}
-		}
-
-		Console.WriteLine();
-		return choice;
-	}
-
 	private static void PlayGame(ref char[,] Board, ref ShipType[] Ships)
 	{
+		char[,] OriginalBoard = new char[BoardSize, BoardSize];
+
+		for(int row = 0; row < BoardSize; row ++)
+		{
+			for(int col = 0; col < BoardSize; col++)
+			{
+				OriginalBoard[row, col] = Board[row, col];
+			}
+		}
+		// using "OriginalBoard = Board" seems to mirror the two arrays!
+		// so just copied them using a couple of for loops
+
 		bool GameWon = false;
+
 		while (GameWon == false)
 		{
 			PrintBoard(Board);
-			MakePlayerMove(ref Board, ref Ships);
+			MakePlayerMove(ref Board, ref OriginalBoard, ref Ships);
 			GameWon = CheckWin(Board);
 			if (GameWon == true)
 			{
@@ -538,54 +603,139 @@ class Program
 		}
 	}
 
+
+	private static void PlaySalvo(ref char[,] Board, ref ShipType[] Ships)
+	{
+		bool GameWon = false;
+		bool MadeHit = true;
+
+
+		while (MadeHit == true)
+		{
+			MadeHit = false;
+			PrintBoard(Board);
+			MakeSalvoMove(ref Board, ref Ships, ref MadeHit);
+		}
+
+		GameWon = CheckWin(Board);
+
+		if (GameWon == true)
+		{
+			PrintBoard(Board);
+
+			Console.WriteLine("All ships sunk!");
+			Console.WriteLine();
+		}
+		else
+		{
+			PrintBoard(Board);
+
+			Console.WriteLine("Sorry, you loose!");
+			Console.WriteLine();
+		}
+	}
+
+	private static void MakeSalvoMove(ref char[,] Board, ref ShipType[] Ships, ref bool MadeHit)
+	{
+		int Row = 0;
+		int Column = 0;
+
+		for(int i = 0; i < 5; i++)
+		{
+
+			GetRowColumn(ref Row, ref Column);
+
+			if (Board[Row, Column] == 'm' || Board[Row, Column] == 'h')
+			{
+				Console.WriteLine("Sorry, you have already shot at the square (" + Column + "," + Row + "). Please try again.");
+				i--;
+			}
+			else if (Board[Row, Column] == '-')
+			{
+				Board[Row, Column] = 'm';
+			}
+			else
+			{
+				Board[Row, Column] = 'h';
+				MadeHit = true;
+			}
+
+		}
+	}	
+
 	private static void SetUpShips(ref ShipType[] Ships)
 	{
 		Ships[0].Name = "Aircraft Carrier";
 		Ships[0].Size = 5;
 		Ships[0].HitCount = 0;
+
 		Ships[1].Name = "Battleship";
 		Ships[1].Size = 4;
-		Ships[0].HitCount = 0;
+		Ships[1].HitCount = 0;
+
 		Ships[2].Name = "Submarine";
 		Ships[2].Size = 3;
-		Ships[0].HitCount = 0;
+		Ships[2].HitCount = 0;
+
 		Ships[3].Name = "Destroyer";
 		Ships[3].Size = 3;
-		Ships[0].HitCount = 0;
+		Ships[3].HitCount = 0;
+
 		Ships[4].Name = "Patrol Boat";
 		Ships[4].Size = 2;
-		Ships[0].HitCount = 0;
+		Ships[4].HitCount = 0;
 	}
 
 	static void Main(string[] args)
 	{
 
 		string TrainingGame = "";
-		ShipType[] Ships = new ShipType[5];
-		char[,] Board = new char[10, 10];
-		int MenuOption = 0;
+	
 
-		while (MenuOption != 9)
+		ShipType[] Ships = new ShipType[5];
+	
+		char[,] Board = new char[BoardSize, BoardSize];
+		string MenuOption = "0";
+
+		while (MenuOption != "9")
 		{
 			SetUpBoard(ref Board);
 			SetUpShips(ref Ships);
 			DisplayMenu();
-			MenuOption = GetMainMenuChoice();
-			if (MenuOption == 1)
+
+
+
+			Console.Write("Enter menu option: ");
+			MenuOption = Console.ReadLine();
+
+			if (MenuOption == "1")
+			// play regular
 			{
 				PlaceRandomShips(ref Board, Ships);
 				PlaceRandomMines(ref Board, 3);
 				PlayGame(ref Board, ref Ships);
 			}
-			if (MenuOption == 2)
+			else if (MenuOption == "2")
+			// play Salvo!
 			{
+				PlaceRandomShips(ref Board, Ships);
+				PlaySalvo(ref Board, ref Ships);
+			}
+			else if (MenuOption == "3")
+			{
+			// load game
 				LoadGame(GetFileName(), ref Board);
 				PlayGame(ref Board, ref Ships);
 			}
-			if (MenuOption == 3)
+			else if (MenuOption == "4")
+			// compress file
 			{
 				Console.WriteLine("\n" + CompressFile(GetFileName()));
 				Console.WriteLine();
+			}
+			else
+			{
+				Console.WriteLine("Invalid menu option.");
 			}
 		}
 
