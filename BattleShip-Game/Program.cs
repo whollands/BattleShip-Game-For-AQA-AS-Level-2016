@@ -1,8 +1,9 @@
-﻿/*
- * 
- *
- * 
-*/
+﻿// Skeleton Program for the AQA AS1 Summer 2016 examination
+// this code should be used in conjunction with the Preliminary Material
+// written by the AQA AS1 Programmer Team
+// developed in a Visual Studio 2015 Community programming environment
+
+// Modified and improved for 2016 Exam preparation by Will Hollands
 
 using System;
 using System.IO;
