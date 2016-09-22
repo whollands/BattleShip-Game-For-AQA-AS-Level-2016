@@ -9,7 +9,6 @@ TestResults/
 
 # globs
 Makefile.in
-*.DS_Store
 *.sln.cache
 *.suo
 *.cache
@@ -38,3 +37,5 @@ Thumbs.db
 
 #dotCover
 *.dotCover
+*.DS_Store
+*Icon?
