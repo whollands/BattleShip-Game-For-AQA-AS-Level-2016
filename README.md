@@ -6,4 +6,4 @@ Battleships game for 2016 AQA exam prepration, coded in C#
 
 Built in Xamarin Studio
 
-Code stored in `BattleShip-Game/Program.cs`
+Code stored in `Program.cs`
